@@ -1,0 +1,10 @@
+/venv/
+/api/node_modules/
+
+/data/sample.json
+/data/output_biden/
+/data/output_trump/
+
+/data/hashtag_joebiden.csv
+/data/hashtag_donaldtrump.csv
+
