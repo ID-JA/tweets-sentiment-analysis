@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import io from "socket.io-client";
+import debounce from "lodash.debounce";
 
 import {
   Card,
@@ -19,11 +20,18 @@ import { Badge } from "./components/badge";
 // Define TypeScript interfaces
 interface Tweet {
   tweet_id: string;
-  sentiment: "positive" | "negative" | "neutral";
+  tweet: string;
+  user_name: string;
+  user_handle: string;
+  createdAt: string;
+  processed_at: number;
+  sentiment: string;
+  sentiment_score: number;
+  candidate: string;
 }
 
 // Initialize socket connection
-const socket = io("http://192.168.1.9:5000", {
+const socket = io("http://192.168.1.12:5000", {
   reconnectionDelay: 1000,
   reconnection: true,
   reconnectionAttempts: 10,
@@ -49,6 +57,14 @@ function App() {
     return Math.round((count / total) * 100);
   };
 
+  const debouncedSetSentimentCounts = useMemo(
+    () =>
+      debounce((newCounts) => {
+        setSentimentCounts(newCounts);
+      }, 500),
+    []
+  );
+
   useEffect(() => {
     // Socket connection handlers
     socket.on("connect", () => {
@@ -62,26 +78,25 @@ function App() {
     });
 
     socket.on("tweet_sentiment", (data: Tweet) => {
-      setTweets((prev) => [data, ...prev.slice(0, 20)]);
-
+      setTweets((prev) => [data, ...prev]);
       setTotal((prevTotal) => prevTotal + 1);
 
-      setSentimentCounts((prev) => {
-        const newCounts = {
-          ...prev,
-          [data.sentiment.split(":")[0].toLocaleLowerCase()]:
-            prev[data.sentiment.split(":")[0].toLocaleLowerCase()] + 1,
-        };
-        return newCounts;
-      });
+      // Update sentiment counts with debouncing
+      const sentiment = data.sentiment.split(":")[0].toLowerCase();
+      debouncedSetSentimentCounts((prev) => ({
+        ...prev,
+        [sentiment]: prev[sentiment] + 1,
+      }));
     });
 
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("tweet_sentiment");
+      debouncedSetSentimentCounts.cancel();
     };
-  }, []);
+  }, [debouncedSetSentimentCounts]);
+  console.log({ tweets });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -93,9 +108,7 @@ function App() {
           <h1 className="text-xl font-bold">
             Election Tweet Sentiment Analysis
           </h1>
-          <div>
-            <TopicFilter />
-          </div>
+          <div></div>
         </div>
       </header>
       <main className="flex-1 container py-6 mx-auto">
@@ -103,7 +116,6 @@ function App() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="candidates">Candidates</TabsTrigger>
-            <TabsTrigger value="topics">Topics</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -169,7 +181,7 @@ function App() {
                 </CardContent>
               </Card>
             </div>
-            {/* <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               <Card className="col-span-1">
                 <CardHeader>
                   <CardTitle>Sentiment Over Time</CardTitle>
@@ -177,8 +189,8 @@ function App() {
                     Tweet sentiment trends over the past 30 days
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px]">
-                  <SentimentOverTime />
+                <CardContent className="h-[350px]">
+                  <SentimentOverTime tweets={tweets} />
                 </CardContent>
               </Card>
               <Card className="col-span-1">
@@ -188,17 +200,11 @@ function App() {
                     Overall distribution of tweet sentiments
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px]">
-                  <SentimentDistribution
-                    data={[
-                      { name: "Positive", value: sentimentCounts.positive },
-                      { name: "Negative", value: sentimentCounts.negative },
-                      { name: "Neutral", value: sentimentCounts.neutral },
-                    ]}
-                  />
+                <CardContent className="h-[350px]">
+                  <SentimentDistribution sentimentCounts={sentimentCounts} />
                 </CardContent>
               </Card>
-            </div> */}
+            </div>
             <Card>
               <CardHeader>
                 <CardTitle>Recent Tweets</CardTitle>
@@ -220,7 +226,7 @@ function App() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="h-[400px]">
-                <CandidateComparison />
+                <CandidateComparison tweets={tweets} />
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,9 +1,23 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { memo, useMemo } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
+interface SentimentDistributionProps {
+  sentimentCounts: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  }
+}
 
-const COLORS = ["#4ade80", "#f87171", "#94a3b8"]
+const COLORS = ["#4ade80", "#f87171", "#94a3b8"];
 
-export function SentimentDistribution({data}) {
+function SentimentDistributionBase({ sentimentCounts }: SentimentDistributionProps) {
+  const data = useMemo(() => [
+    { name: "Positive", value: sentimentCounts.positive },
+    { name: "Negative", value: sentimentCounts.negative },
+    { name: "Neutral", value: sentimentCounts.neutral },
+  ], [sentimentCounts.positive, sentimentCounts.negative, sentimentCounts.neutral]);
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
@@ -25,5 +39,7 @@ export function SentimentDistribution({data}) {
         <Legend />
       </PieChart>
     </ResponsiveContainer>
-  )
+  );
 }
+
+export const SentimentDistribution = memo(SentimentDistributionBase);

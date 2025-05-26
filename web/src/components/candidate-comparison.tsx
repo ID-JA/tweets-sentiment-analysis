@@ -1,34 +1,51 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
-// Sample data for candidate comparison
-const data = [
-  {
-    name: "Candidate A",
-    positive: 45,
-    negative: 30,
-    neutral: 25,
-  },
-  {
-    name: "Candidate B",
-    positive: 38,
-    negative: 42,
-    neutral: 20,
-  },
-  {
-    name: "Candidate C",
-    positive: 30,
-    negative: 35,
-    neutral: 35,
-  },
-  {
-    name: "Candidate D",
-    positive: 42,
-    negative: 28,
-    neutral: 30,
-  },
-]
+interface Tweet {
+  tweet_id: string
+  tweet: string
+  user_name: string
+  user_handle: string
+  createdAt: string
+  processed_at: number
+  sentiment: string
+  sentiment_score: number
+  candidate: string
+}
 
-export function CandidateComparison() {
+interface CandidateStats {
+  name: string
+  positive: number
+  negative: number
+  neutral: number
+}
+
+interface CandidateComparisonProps {
+  tweets: Tweet[]
+}
+
+export function CandidateComparison({ tweets }: CandidateComparisonProps) {
+  // Process tweets to get sentiment counts per candidate
+  const candidateStats = tweets.reduce((acc: { [key: string]: CandidateStats }, tweet) => {
+    const candidate = tweet.candidate.charAt(0).toUpperCase() + tweet.candidate.slice(1)
+    if (!acc[candidate]) {
+      acc[candidate] = {
+        name: candidate,
+        positive: 0,
+        negative: 0,
+        neutral: 0
+      }
+    }
+
+    const sentiment = tweet.sentiment.split(':')[0].toLowerCase()
+    if (sentiment === 'positive') acc[candidate].positive++
+    if (sentiment === 'negative') acc[candidate].negative++
+    if (sentiment === 'neutral') acc[candidate].neutral++
+
+    return acc
+  }, {})
+
+  const data = Object.values(candidateStats)
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
