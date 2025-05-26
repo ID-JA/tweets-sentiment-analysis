@@ -40,10 +40,10 @@ public class MongoBolt extends BaseRichBolt {
 
     @Override
     public void prepare(Map<String, Object> topoConf, TopologyContext context, OutputCollector collector) {
-        String dbName = "tweets_db";
         this.collector = collector;
+        String dbName = "tweets_db";
         String collectionName = "election_sentiments";
-        String connectionString = "mongodb+srv://idaissa93:uX1Lav2mNeej8IHn@cluster0.tlf0gga.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+        String connectionString = "mongodb+srv://username:password@cluster0.example.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
         try {
             // Setup MongoDB connection
@@ -96,6 +96,7 @@ public class MongoBolt extends BaseRichBolt {
                         .append("state", input.getValueByField("state").toString())
                         .append("state_code", input.getValueByField("state_code").toString())
                         .append("collected_at", parseDate(input.getValueByField("collected_at")))
+                        .append("candidate", input.getValueByField("candidate").toString())
                         .append("processed_at", new Date());
 
                 collection.insertOne(doc);
@@ -115,13 +116,11 @@ public class MongoBolt extends BaseRichBolt {
             try {
                 String tweetId = input.getValueByField("tweet_id").toString();
                 String sentiment = input.getValueByField("sentiment").toString();
-                String candidate = input.getValueByField("candidate").toString();
                 int sentimentScore = input.getIntegerByField("sentiment_score");
 
                 Document filter = new Document("tweet_id", tweetId);
                 Document update = new Document("$set", new Document()
                     .append("sentiment", sentiment)
-                    .append("candidate", candidate)
                     .append("sentiment_score", sentimentScore));
 
                 collection.updateOne(filter, update);

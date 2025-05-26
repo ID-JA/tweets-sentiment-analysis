@@ -1,4 +1,0 @@
-/home/kafka/election-tweets-sentiment-analysis/src/main/java/org/octopustech/bolts/JsonParsingBolt.java
-/home/kafka/election-tweets-sentiment-analysis/src/main/java/org/octopustech/TwitterStormTopology.java
-/home/kafka/election-tweets-sentiment-analysis/src/main/java/org/octopustech/bolts/MongoBolt.java
-/home/kafka/election-tweets-sentiment-analysis/src/main/java/org/octopustech/bolts/SentimentBolt.java

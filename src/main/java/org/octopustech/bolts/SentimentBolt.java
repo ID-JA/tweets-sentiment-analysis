@@ -2,7 +2,6 @@ package org.octopustech.bolts;
 
 import edu.stanford.nlp.pipeline.*;
 import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import edu.stanford.nlp.trees.Tree;
@@ -19,26 +18,17 @@ import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.apache.commons.text.similarity.LevenshteinDistance;
 
 public class SentimentBolt extends BaseRichBolt {
     private static final Logger LOGGER = LoggerFactory.getLogger(SentimentBolt.class);
     private OutputCollector collector;
     private StanfordCoreNLP pipeline;
     private ObjectMapper mapper;
-
-    private static final List<String> candidates = Arrays.asList(
-            "Biden", "Trump", "RFK", "Kennedy", "Nikki Haley", "Vivek", "DeSantis", "Donald", "Joe Biden");
 
     @Override
     public void prepare(Map<String, Object> arg0, TopologyContext arg1, OutputCollector collector) {
@@ -59,6 +49,7 @@ public class SentimentBolt extends BaseRichBolt {
             String userName = input.getStringByField("user_name");
             String userHandle = input.getStringByField("user_screen_name");
             String createdAt = input.getStringByField("collected_at");
+            String candidate = input.getStringByField("candidate");
 
             String cleaned_tweet = cleanText(tweet);
 
@@ -66,7 +57,6 @@ public class SentimentBolt extends BaseRichBolt {
             int sentimentScore = getSentimentScore(cleaned_tweet);
             System.out.printf(
                     "😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶😶");
-            String candidate = detectCandidateWithNERAndFuzzy(cleaned_tweet);
 
             // Create JSON object
             ObjectNode jsonNode = mapper.createObjectNode();
@@ -93,54 +83,6 @@ public class SentimentBolt extends BaseRichBolt {
         }
     }
 
-    private String detectCandidateWithNER(String text) {
-        Annotation document = new Annotation(text);
-        pipeline.annotate(document);
-
-        Set<String> matchedCandidates = new HashSet<>();
-
-        for (CoreMap sentence : document.get(CoreAnnotations.SentencesAnnotation.class)) {
-            for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-                String word = token.word();
-                String ner = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
-
-                if ("PERSON".equals(ner)) {
-                    for (String candidate : candidates) {
-                        if (word.equalsIgnoreCase(candidate) || candidate.toLowerCase().contains(word.toLowerCase())) {
-                            matchedCandidates.add(candidate);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (!matchedCandidates.isEmpty()) {
-            return matchedCandidates.iterator().next(); // Return the first matched candidate
-        }
-
-        return "Unknown";
-    }
-
-    private String detectCandidateWithNERAndFuzzy(String text) {
-        String nerCandidate = detectCandidateWithNER(text);
-        if (!"Unknown".equals(nerCandidate)) {
-            return nerCandidate;
-        }
-
-        LevenshteinDistance distance = LevenshteinDistance.getDefaultInstance();
-        int minDistance = Integer.MAX_VALUE;
-        String bestMatch = "Unknown";
-
-        for (String candidate : candidates) {
-            int dist = distance.apply(candidate.toLowerCase(), text.toLowerCase());
-            if (dist < minDistance && dist < 5) { // Threshold
-                minDistance = dist;
-                bestMatch = candidate;
-            }
-        }
-
-        return bestMatch;
-    }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

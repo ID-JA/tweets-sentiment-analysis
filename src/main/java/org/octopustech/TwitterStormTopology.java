@@ -23,7 +23,7 @@ public class TwitterStormTopology {
         
         String fields = "created_at,tweet_id,tweet,likes,retweet_count,source," +
                 "user_id,user_name,user_screen_name,user_join_date,user_followers_count," +
-                "city,country,state,state_code,collected_at";
+                "city,country,state,state_code,collected_at,candidate";
 
         // Kafka Spout Config
         KafkaSpoutConfig<String, String> kafkaSpoutConfig = KafkaSpoutConfig.builder(kafkaBootstrapServers, kafkaTopic)

@@ -15,8 +15,8 @@ producer = KafkaProducer(
 )
 
 def load_and_prepare_data():
-    biden_df = pd.read_json(BIDEN_FILE, lines=True, nrows=1000)
-    trump_df = pd.read_json(TRUMP_FILE, lines=True, nrows=1000)
+    biden_df = pd.read_json(BIDEN_FILE, lines=True, nrows=1500)
+    trump_df = pd.read_json(TRUMP_FILE, lines=True, nrows=1500)
 
     biden_df['candidate'] = 'biden'
     trump_df['candidate'] = 'trump'
@@ -45,10 +45,10 @@ def serialize_row(row):
             row_dict[key] = convert_date(value)
     return row_dict
 
-def stream_tweets():
+def stream_tweets(df):
     counter = 0
-    df = pd.read_json("./sample.json", lines=True)
-    NULL = None
+    # df = pd.read_json("./sample.json", lines=True)
+    # NULL = None
     df['user_location'] = "Unknow"
     df['lat'] = 0
     df['long'] = 0
@@ -69,5 +69,5 @@ def stream_tweets():
 
 
 if __name__ == '__main__':
-    # df = load_and_prepare_data()
-    stream_tweets()
+    df = load_and_prepare_data()
+    stream_tweets(df)
