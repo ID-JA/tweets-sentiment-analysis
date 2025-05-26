@@ -6,3 +6,5 @@
 > [!NOTE]  
 > This project is an assignment for my Master's degree program.<br/>
 > This project isn't ready for production use.
+
+The dataset used in this project can be downloaded from : <br/> [![Kaggle](https://img.shields.io/badge/Kaggle-035a7d?style=for-the-badge&logo=kaggle&logoColor=white)](https://www.kaggle.com/datasets/manchunhui/us-election-2020-tweets/data)
